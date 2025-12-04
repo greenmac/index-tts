@@ -1,6 +1,8 @@
+from data.voice_gen_text import gen_text_list
 from indextts.infer_v2 import IndexTTS2
-from utils_tool import timer
 from pathlib import Path
+from utils_tool import timer
+from utils_tool import get_ensure_dir
 import opencc
 import torch
 import numpy as np
@@ -17,12 +19,25 @@ def export_tts_whole(category: str, spk_audio_prompt: Path, text_path: Path, emo
         # use_deepspeed=True,
     )
     
-    # text_ori = "The player's winning percentage is very high right now, so hurry up and increase your bet!"
-    text_ori = text_path.read_text(encoding='utf-8')
-    text = get_text_cn(text_ori)
-    output_path = spk_audio_prompt.parent / f'{category}_{text_path.stem}.wav'
+    for item in gen_text_list:
+        host = item['host']
+        context = item['context']
+        if host == category:
+            for entry in context: # entry 表示每個語音內容條目
+                title: str = entry['title']
+                text_ori = entry['text']
+                text = get_text_cn(text_ori)
+                output_path = get_ensure_dir(spk_audio_prompt.parent / title.rsplit('_', 1)[0]) /f'{category}_voice_{title}.wav'
+            
+                get_once_gen_tts_functions(spk_audio_prompt, tts, text, output_path, emo_audio_prompt, emo_alpha) # 一次生成並播放全部
+                # get_segmented_gen_tts_functions(spk_audio_prompt, tts, text, output_path, emo_audio_prompt, emo_alpha) # 分段生成並播放
     
-    get_once_gen_tts_functions(spk_audio_prompt, tts, text, output_path, emo_audio_prompt, emo_alpha) # 一次生成並播放全部
+    
+    # # text_ori = "The player's winning percentage is very high right now, so hurry up and increase your bet!"
+    # text_ori = text_path.read_text(encoding='utf-8')
+    # text = get_text_cn(text_ori)
+    # output_path = spk_audio_prompt.parent / f'{category}_{text_path.stem}.wav'
+    
     # get_segmented_gen_tts_functions(spk_audio_prompt, tts, text, output_path, emo_audio_prompt, emo_alpha) # 分段生成並播放
     
 def get_text_cn(text_ori) -> str:
@@ -74,7 +89,7 @@ def get_once_gen_tts_functions(spk_audio_prompt: Path, tts: IndexTTS2, text: str
         emo_audio_prompt=emo_audio_prompt, # 情感音頻範例
         emo_alpha=emo_alpha, # 情感強度調整參數 (1.0 為原始情感強度，數值越大情感越明顯)
     )
-    play_audio(audio, sample_rate=24000)
+    # play_audio(audio, sample_rate=24000)
     
 def get_segmented_gen_tts_functions(spk_audio_prompt: Path, tts: IndexTTS2, text: str, output_path: Path, emo_audio_prompt: str, emo_alpha: float):
     chunks = text.split(", ")
@@ -93,8 +108,8 @@ def get_segmented_gen_tts_functions(spk_audio_prompt: Path, tts: IndexTTS2, text
 
 if __name__ == "__main__":
     root_dir = Path('./data')
-    category = 'Trump'
-    # category = 'JackyChen'
+    # category = 'Trump'
+    category = 'JackyChen'
     # category = 'PenélopeCruz'
     train_dir = root_dir / category / 'train'
     
