@@ -108,13 +108,13 @@ def get_segmented_gen_tts_functions(spk_audio_prompt: Path, tts: IndexTTS2, text
 
 if __name__ == "__main__":
     root_dir = Path('./data')
-    # category = 'Trump'
-    category = 'JackyChen'
+    category = 'Trump'
+    # category = 'JackyChen'
     # category = 'PenélopeCruz'
     train_dir = root_dir / category / 'train'
     
     spk_audio_prompt = train_dir / f'train_{category}_01.wav'
     text_path = train_dir / 'Voice_EncourageBetting_gen.txt'
     emo_audio_prompt = './data/Trump/train/train_Trump_01.wav'
-    emo_alpha = 1.5 
+    emo_alpha = 3.0
     export_tts_whole(category, spk_audio_prompt, text_path, emo_audio_prompt, emo_alpha)
